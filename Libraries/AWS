@@ -1,1 +1,130 @@
+getgenv().FireLib = {}
+local Plr = game:GetService("Players").LocalPlayer
 
+function FireLib.GetBestBag(Zone)
+	if Zone == nil then Zone = Firelib.GetStat("CurrentZone") end
+	local BagsModule = require(game:GetService("ReplicatedStorage").Data.PunchBags)
+	if BagsModule[Zone] == nil then return end
+	local NewBagsTable = {}
+	for i, v in pairs(BagsModule[Zone]) do
+		table.insert(NewBagsTable, {Name = i, Required = v.StrengthRequired})
+	end
+	table.sort(NewBagsTable, function(a, b)
+		return a.Required < b.Required
+	end)
+	local BestBag
+	for i, v in pairs(NewBagsTable) do
+		if BestBag == nil then BestBag = v.Name end
+		if FireLib.GetStat("KnuckleStrength") > v.Required and BagsModule[Zone][BestBag].StrengthRequired < v.Required then
+			BestBag = v.Name
+		end
+	end
+	return BestBag
+end
+
+function FireLib.GetBestGripper(Zone)
+	if Zone == nil then Zone = FireLib.GetStat("CurrentZone") end 
+	local GripsModule = require(game:GetService("ReplicatedStorage").Data.Grips)
+	if GripsModule[Zone] == nil then return end
+	local NewGripsTable = {}
+	for i, v in pairs(GripsModule[Zone]) do
+		table.insert(NewGripsTable, {Name = i, Required = v.StrengthRequired})
+	end
+	table.sort(NewGripsTable, function(a, b)
+		return a.Required < b.Required
+	end)
+	local BestGripper
+	for i, v in pairs(NewGripsTable) do
+		if BestGripper == nil then BestGripper = v.Name end
+		if FireLib.GetStat("HandStrength") > v.Required and GripsModule[Zone][BestGripper].StrengthRequired < v.Required then
+			BestGripper = v.Name
+		end
+	end
+	return BestGripper
+end
+
+function FireLib.GetBestDumbell(Zone)
+	if Zone == nil then Zone = FireLib.GetStat("CurrentZone") end 
+	local DumbellsModule = require(game:GetService("ReplicatedStorage").Data.Dumbells)
+	if DumbellsModule[Zone] == nil then return end
+	local NewDumbellTable = {}
+	for i, v in pairs(DumbellsModule[Zone]) do
+		table.insert(NewDumbellTable, {Name = i, Required = v.StrengthRequired})
+	end
+	table.sort(NewDumbellTable, function(a, b)
+		return a.Required < b.Required
+	end)
+	local BestDumbell
+	for i, v in pairs(NewDumbellTable) do
+		if BestDumbell == nil then BestDumbell = v.Name end
+		if FireLib.GetStat("BicepPower") > v.Required and DumbellsModule[Zone][BestDumbell].StrengthRequired < v.Required then
+			BestDumbell = v.Name
+		end
+	end
+	return BestDumbell
+end
+
+function FireLib.Equip(Args)
+	game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("ToolService"):WaitForChild("RE"):WaitForChild("onEquipRequest"):FireServer(unpack(Args))
+end
+
+function FireLib.Unequip()
+	game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("ToolService"):WaitForChild("RE"):WaitForChild("onUnequipRequest"):FireServer()
+end
+
+function FireLib.Train(Type, Args)
+	if Type == "Bicep" or Type == "Hand" then
+		game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("ToolService"):WaitForChild("RE"):WaitForChild("onClick"):FireServer()
+	elseif Type == "Knuckles" then
+		game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PunchBagService"):WaitForChild("RE"):WaitForChild("onGiveStats"):FireServer(unpack(Args))
+	end
+end
+
+function FireLib.EnterFight(Boss)
+    local Args = {
+        [1] = Boss,
+        [2] = workspace.GameObjects.ArmWrestling[FireLib.GetStat("CurrentZone")].NPC:FindFirstChild(Boss).Table,
+        [3] = FireLib.GetStat("CurrentZone")
+    }    
+    game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("ArmWrestleService"):WaitForChild("RE"):WaitForChild("onEnterNPCTable"):FireServer(unpack(Args))
+end
+
+function FireLib.ClickFight(Args)
+    game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("ArmWrestleService"):WaitForChild("RE"):WaitForChild("onClickRequest"):FireServer()
+end
+
+function FireLib.GetStats(TargetPlr)
+	if TargetPlr == nil then
+		TargetPlr = Plr
+	end
+	if typeof(TargetPlr) == "string" then
+		TargetPlr = game:GetService("Players"):FindFirstChild(Plr)
+	end
+	return TargetPlr:GetAttributes()
+end
+
+function FireLib.GetStat(Arg1, Arg2)
+	if Arg2 == nil then
+		return Plr:GetAttribute(Arg1)
+	else
+		if typeof(Arg1) == "string" then
+			Arg1 = game:GetService("Players"):FindFirstChild(Plr)
+		end
+		return Arg1:GetAttribute(Arg2)
+	end
+end
+
+local SetStatUsed = false
+function FireLib.SetStat(Arg1, Arg2, Arg3)
+	if not SetStatUsed then warn("This function sets a value on the CLIENT-SIDE!!! Its use is NOT to get infinite stats.") SetStatUsed = true end
+	if Arg3 == nil then
+		Plr:SetAttribute(Arg1, Arg2)
+	else
+		if typeof(Arg1) == "string" then
+			Arg1 = game:GetService("Players"):FindFirstChild(Arg1)
+		end
+		Arg1:SetAttribute(Arg2, Arg3)
+	end
+end
+
+return FireLib

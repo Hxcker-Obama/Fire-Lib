@@ -1,0 +1,6 @@
+local ID = game.GameId
+local SelectedLib
+if ID = 4582358979 then
+    SelectedLib = "AWS"
+end
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Hxcker-Obama/Fire-Lib/refs/heads/main/Libraries/"..tostring(SelectedLib)))()
